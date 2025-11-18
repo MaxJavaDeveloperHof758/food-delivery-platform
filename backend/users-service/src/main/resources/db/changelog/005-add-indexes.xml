@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="add_indexes" author="MaxJavaDeveloperHof758">
+        <createIndex tableName="users" indexName="idx_users_email" unique="true">
+            <column name="email"/>
+        </createIndex>
+
+        <createIndex tableName="addresses" indexName="idx_addresses_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="user_roles" indexName="idx_user_roles_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="user_roles" indexName="idx_user_roles_role_id">
+            <column name="role_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="users" indexName="idx_users_email"/>
+            <dropIndex tableName="addresses" indexName="idx_addresses_user_id"/>
+            <dropIndex tableName="user_roles" indexName="idx_user_roles_user_id"/>
+            <dropIndex tableName="user_roles" indexName="idx_user_roles_role_id"/>
+        </rollback>
+
+    </changeSet>
+</databaseChangeLog>

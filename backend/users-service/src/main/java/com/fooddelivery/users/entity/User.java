@@ -1,11 +1,21 @@
 package com.fooddelivery.users.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "users")
 public class User {
@@ -14,10 +24,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, length = 100)
+    @Column(unique = true, nullable = false,length = 100)
     private String email;
 
-    @Column(name="password_hash")
+    @Column(name="password_hash",unique = true,nullable = false)
     private String passwordHash;
 
     @Column(name="full_name",nullable = false)
@@ -29,12 +39,12 @@ public class User {
     @Column(name="updated_at",nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    private Address address;
+    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL,fetch=FetchType.LAZY)
+    private List<Address> addresses=new ArrayList<>();
 
     @ManyToMany(fetch=FetchType.LAZY)
     @JoinTable(
-            name="users_roles",
+            name="user_roles",
             joinColumns = @JoinColumn(name="user_id"),
             inverseJoinColumns = @JoinColumn(name="role_id")
     )
@@ -50,5 +60,4 @@ public class User {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
 }
