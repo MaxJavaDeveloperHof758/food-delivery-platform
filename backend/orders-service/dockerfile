@@ -9,10 +9,10 @@ USER spring
 WORKDIR /app
 
 # Копируем JAR файл в контейнер
-COPY target/users-service-*.jar app.jar
+COPY target/orders-service-*.jar app.jar
 
 # Открываем порт
-EXPOSE 8081
+EXPOSE 8083
 
 # Команда запуска
 ENTRYPOINT ["java", "-jar", "app.jar"]

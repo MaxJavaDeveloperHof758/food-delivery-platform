@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="add_indexes" author="MaxJavaDeveloperHof758">
+        <createIndex tableName="orders" indexName="idx_orders_status_order_date">
+            <column name="status"/>
+            <column name="order_date"/>
+        </createIndex>
+
+        <createIndex tableName="orders" indexName="idx_orders_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="orders" indexName="idx_orders_restaurant_id">
+            <column name="restaurant_id"/>
+        </createIndex>
+
+        <createIndex tableName="order_items" indexName="idx_order_items_order_id">
+            <column name="order_id"/>
+        </createIndex>
+
+        <createIndex tableName="payments" indexName="idx_payments_order_id">
+            <column name="order_id"/>
+        </createIndex>
+
+        <createIndex tableName="payments" indexName="idx_payments_status">
+            <column name="status"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="orders" indexName="idx_orders_status_order_date"/>
+            <dropIndex tableName="orders" indexName="idx_orders_user_id"/>
+            <dropIndex tableName="orders" indexName="idx_orders_restaurant_id"/>
+            <dropIndex tableName="order_items" indexName="idx_order_items_order_id"/>
+            <dropIndex tableName="payments" indexName="idx_payments_order_id"/>
+            <dropIndex tableName="payments" indexName="idx_payments_status"/>
+        </rollback>
+
+    </changeSet>
+</databaseChangeLog>

@@ -12,7 +12,7 @@ WORKDIR /app
 COPY target/restaurants-service-*.jar app.jar
 
 # Открываем порт
-EXPOSE 8080
+EXPOSE 8082
 
 # Команда запуска
 ENTRYPOINT ["java", "-jar", "app.jar"]

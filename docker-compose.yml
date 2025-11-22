@@ -18,7 +18,7 @@ services:
     image: final-users-service
     container_name: users-service
     ports:
-      - "8081:8080"
+      - "8081:8081"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://users-db:5432/users_db
       - SPRING_DATASOURCE_USERNAME=postgres
@@ -28,13 +28,14 @@ services:
     depends_on:
       - users-db
       
-      # Restaurants Microservice
+  # Restaurants Microservice
   restaurants-db:
     image: postgres:11
     container_name: restaurants-db
     environment:
-      POSTGRES_PASSWORD: 12345
       POSTGRES_DB: restaurants_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
     ports:
       - "5433:5432"
     networks:
@@ -46,7 +47,7 @@ services:
       dockerfile: Dockerfile
     container_name: restaurants-service
     ports:
-      - "8082:8080"
+      - "8082:8082"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://restaurants-db:5432/restaurants_db
       - SPRING_DATASOURCE_USERNAME=postgres
@@ -61,8 +62,9 @@ services:
     image: postgres:11
     container_name: orders-db
     environment:
-      POSTGRES_PASSWORD: 12345
       POSTGRES_DB: orders_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
     ports:
       - "5434:5432"
     networks:
@@ -74,7 +76,7 @@ services:
       dockerfile: Dockerfile
     container_name: orders-service
     ports:
-      - "8083:8080"
+      - "8083:8083"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://orders-db:5432/orders_db
       - SPRING_DATASOURCE_USERNAME=postgres
