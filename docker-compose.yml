@@ -1,0 +1,89 @@
+version: '2.4'
+
+services:
+  users-db:
+    image: postgres:11
+    container_name: users-db
+    environment:
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: users_db
+      POSTGRES_HOST_AUTH_METHOD: md5
+    ports:
+      - "5432:5432"
+    command: postgres -c listen_addresses='*' -c password_encryption=md5
+    networks:
+      - microservices-net
+
+  users-service:
+    image: final-users-service
+    container_name: users-service
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://users-db:5432/users_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=12345
+    networks:
+      - microservices-net
+    depends_on:
+      - users-db
+      
+      # Restaurants Microservice
+  restaurants-db:
+    image: postgres:11
+    container_name: restaurants-db
+    environment:
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: restaurants_db
+    ports:
+      - "5433:5432"
+    networks:
+      - microservices-net
+
+  restaurants-service:
+    build:
+      context: ./backend/restaurants-service
+      dockerfile: Dockerfile
+    container_name: restaurants-service
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://restaurants-db:5432/restaurants_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=12345
+    depends_on:
+      - restaurants-db
+    networks:
+      - microservices-net
+
+  # Orders Microservice
+  orders-db:
+    image: postgres:11
+    container_name: orders-db
+    environment:
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: orders_db
+    ports:
+      - "5434:5432"
+    networks:
+      - microservices-net
+
+  orders-service:
+    build:
+      context: ./backend/orders-service
+      dockerfile: Dockerfile
+    container_name: orders-service
+    ports:
+      - "8083:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://orders-db:5432/orders_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=12345
+    depends_on:
+      - orders-db
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    driver: bridge

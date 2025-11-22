@@ -1,0 +1,18 @@
+# Используем официальный образ Java
+FROM amazoncorretto:17-alpine
+
+# Создаем пользователя для безопасности (не запускаем от root)
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring
+
+# Рабочая директория
+WORKDIR /app
+
+# Копируем JAR файл в контейнер
+COPY target/restaurants-service-*.jar app.jar
+
+# Открываем порт
+EXPOSE 8080
+
+# Команда запуска
+ENTRYPOINT ["java", "-jar", "app.jar"]

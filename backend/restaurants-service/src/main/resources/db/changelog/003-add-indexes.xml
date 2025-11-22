@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="add_indexes" author="MaxJavaDeveloperHof758">
+
+        <createIndex tableName="restaurants" indexName="idx_restaurants_name">
+            <column name="name"/>
+        </createIndex>
+
+        <createIndex tableName="restaurants" indexName="idx_restaurants_cuisine">
+            <column name="cuisine"/>
+        </createIndex>
+
+        <createIndex tableName="dishes" indexName="idx_dishes_name">
+            <column name="name"/>
+        </createIndex>
+
+        <createIndex tableName="dishes" indexName="idx_dishes_restaurant_id">
+            <column name="restaurant_id"/>
+        </createIndex>
+
+        <createIndex tableName="dishes" indexName="idx_dishes_price">
+            <column name="price"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="restaurants" indexName="idx_restaurants_name"/>
+            <dropIndex tableName="restaurants" indexName="idx_restaurants_cuisine"/>
+            <dropIndex tableName="dishes" indexName="idx_dishes_name"/>
+            <dropIndex tableName="dishes" indexName="idx_dishes_restaurant_id"/>
+            <dropIndex tableName="dishes" indexName="idx_dishes_price"/>
+        </rollback>
+
+    </changeSet>
+</databaseChangeLog>
