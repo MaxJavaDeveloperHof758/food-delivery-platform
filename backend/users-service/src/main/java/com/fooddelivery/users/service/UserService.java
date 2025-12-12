@@ -1,57 +1,82 @@
 package com.fooddelivery.users.service;
 
+import com.fooddelivery.users.dto.UserRequestDto;
+import com.fooddelivery.users.dto.UserResponseDto;
+import com.fooddelivery.users.entity.Role;
 import com.fooddelivery.users.entity.User;
+import com.fooddelivery.users.exception.ResourceAlreadyExistsException;
+import com.fooddelivery.users.exception.UserNotFoundException;
+import com.fooddelivery.users.mapper.UserMapper;
 import com.fooddelivery.users.repository.UserRepository;
-import org.springframework.data.domain.Sort;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RoleService roleService;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    @Transactional
+    public UserResponseDto createUser(UserRequestDto userRequestDto) {
+        if(userRepository.existsByEmail(userRequestDto.getEmail())){
+            throw new ResourceAlreadyExistsException("User with such email already exists");
+        }
+        Role userRole=roleService.getOrCreateRole("ROLE_USER");
+        User user=userMapper.userRequestDtoToUser(userRequestDto);
+        if (user.getRoles() == null) {
+            user.setRoles(new HashSet<>());
+        }
+        user.getRoles().add(userRole);
+        user.setPasswordHash(passwordEncoder.encode(userRequestDto.getPassword()));
+        User savedUser=userRepository.save(user);
+        return userMapper.userToUserResponseDto(savedUser);
     }
 
-    public User createUser(String email, String passwordHash,
-                           String fullName) {
-        User user = new User();
-        user.setEmail(email);
-        user.setPasswordHash(passwordHash);
-        user.setFullName(fullName);
-        return userRepository.save(user);
+    public List<UserResponseDto> getAllUsers() {                           //поиск всех пользователей
+        return userMapper.userListToUserResponseDtoList(userRepository.findAll());
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public UserResponseDto getUserById(Long id) {                //поиск пользователя по id
+        return userMapper.userToUserResponseDto(userRepository.findByIdWithDetails(id)
+                .orElseThrow(()->new UserNotFoundException("User not found with id "+id)));
     }
 
-    public List<User> getAllUsersSortedByFullName() {           //возвращает пользователей, отсортированных по имени
-        return userRepository.findAllUsers(Sort.by("full_name"));
+    public UserResponseDto getUserByFullName(String fullName) {            //поиск пользователя по его fullName
+        return userMapper.userToUserResponseDto(userRepository.findByFullName(fullName)
+                .orElseThrow(()->new UserNotFoundException("User not found with fullName: "+fullName)));
     }
 
-    public Optional<User> getUserById(Long id) {                //поиск пользователя по Id
-        return userRepository.findById(id);
+    public UserResponseDto getUserByEmail(String email) {                  //поиск пользователя по email
+        return userMapper.userToUserResponseDto(userRepository.findByEmail(email)
+                .orElseThrow(()->new UserNotFoundException("User not found with email: "+email)));
+    }
+    public List<UserResponseDto> getAllUsersByFullNameContaining(String name){     //поиск пользователей по шаблону
+        return userMapper.userListToUserResponseDtoList(userRepository.findUsersByFullNameContaining(name));
     }
 
-    public User getUserByFullName(String fullName) {            //поиск пользователя по его fullName
-        return userRepository.findUserByFullName(fullName);
-    }
-
-    public User getUserByEmail(String email) {                  //поиск пользователя по email
-        return userRepository.findUserByEmail(email);
-    }
-
-    public User updateUser(Long id, String email, String passwordHash, String fullName) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setEmail(email);
-        user.setPasswordHash(passwordHash);
-        user.setFullName(fullName);
-        return userRepository.save(user);
+    public UserResponseDto updateUser(Long userId, UserRequestDto userRequestDto) {
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + userId));
+        if (!existingUser.getEmail().equals(userRequestDto.getEmail()) &&
+                userRepository.existsByEmail(userRequestDto.getEmail())) {
+            throw new ResourceAlreadyExistsException("Email already taken");
+        }
+        userMapper.updateUserFromDto(userRequestDto, existingUser);
+        if (userRequestDto.getPassword() != null &&
+                !userRequestDto.getPassword().isEmpty()) {
+            existingUser.setPasswordHash(passwordEncoder.encode(userRequestDto.getPassword()));
+        }
+        User savedUser = userRepository.save(existingUser);
+        return userMapper.userToUserResponseDto(savedUser);
     }
 
     public void deleteUser(Long id) {

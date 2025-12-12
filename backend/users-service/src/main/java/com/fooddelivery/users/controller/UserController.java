@@ -1,7 +1,15 @@
 package com.fooddelivery.users.controller;
 
+import com.fooddelivery.users.dto.UserRequestDto;
+import com.fooddelivery.users.dto.UserResponseDto;
 import com.fooddelivery.users.entity.User;
 import com.fooddelivery.users.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,32 +17,84 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+@Tag(name = "User API", description = "API for managing users")
 public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    @Operation(summary = "Get one user by ID",
+            description = "Returns user object if it exists in the database",
+            parameters = {
+                    @Parameter(name = "id", description = "User ID", example = "1")
+            })
+    @ApiResponse(responseCode = "200", description = "User found")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDto> getUser(@PathVariable("id") Long id) {
+        UserResponseDto user = userService.getUserById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user){
-        User savedUser=userService.createUser(user.getEmail(),user.getPasswordHash(),user.getFullName());
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
-    }
+    @Operation(summary = "Get all users", description = "Returns all users registered in service")
+    @ApiResponse(responseCode = "200", description = "Users found")
+    @ApiResponse(responseCode = "404", description = "Users not found")
     @GetMapping
-    public List<User> getAllUsers(){
-        return userService.getAllUsers();
+    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+        List<UserResponseDto> usersList = userService.getAllUsers();
+        return ResponseEntity.status(HttpStatus.OK).body(usersList);
     }
-    @PostMapping
-    public ResponseEntity<User> updateUser(@PathVariable Long id,@RequestBody User user){
-        User updateUser=userService.updateUser(id,user.getEmail(),user.getPasswordHash(),user.getFullName());
-        return new ResponseEntity<>(updateUser,HttpStatus.OK);
+
+    @Operation(summary = "Get one user by fullname", description = "Returns one user by his fullname")
+    @ApiResponse(responseCode = "200", description = "User found")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    @GetMapping("/search/fullName")
+    public ResponseEntity<UserResponseDto> getUserByFullName(@RequestParam String fullName) {
+        UserResponseDto user = userService.getUserByFullName(fullName);
+        return ResponseEntity.status(HttpStatus.OK).body(user);
     }
+
+    @Operation(summary = "Get one user by email",
+            description = "Searches for a user by email address",
+            parameters = @Parameter(
+                    name = "email", description = "Email address", example = "user_email@example.com"
+            ))
+    @ApiResponse(responseCode = "200", description = "User found")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    @GetMapping("/search/email")
+    public ResponseEntity<UserResponseDto> getUserByEmail(@RequestParam String email) {
+        UserResponseDto user = userService.getUserByEmail(email);
+        return ResponseEntity.status(HttpStatus.OK).body(user);
+    }
+
+    @Operation(summary = "Get one user by any part of his name",
+            description = "Returns one user by any part of his name (name/firstname/lastname)")
+    @ApiResponse(responseCode = "200", description = "Users found")
+    @ApiResponse(responseCode = "404", description = "Users not found")
+    @GetMapping("search/containing")
+    public ResponseEntity<List<UserResponseDto>> getAllUsersByFullNameContaining(@RequestParam String name) {
+        List<UserResponseDto> usersList = userService.getAllUsersByFullNameContaining(name);
+        return ResponseEntity.status(HttpStatus.OK).body(usersList);
+    }
+
+    @Operation(summary = "Update existing user", description = "Updates existing user by his ID")
+    @ApiResponse(responseCode = "200", description = "User updated")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable("id") Long id,
+                                                      @RequestBody @Valid UserRequestDto userRequestDto) {
+        UserResponseDto updatedUser = userService.updateUser(id, userRequestDto);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
+    }
+
+    @Operation(summary = "Delete existing user", description = "Deletes existing user by his ID")
+    @ApiResponse(responseCode = "204", description = "User deleted successfully")
+    @ApiResponse(responseCode = "404", description = "User not found")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id){
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
         userService.deleteUser(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
