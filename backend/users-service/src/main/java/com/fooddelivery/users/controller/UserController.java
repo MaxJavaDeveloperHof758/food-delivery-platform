@@ -1,8 +1,8 @@
 package com.fooddelivery.users.controller;
 
+import com.fooddelivery.users.dto.RoleRequestDto;
 import com.fooddelivery.users.dto.UserRequestDto;
 import com.fooddelivery.users.dto.UserResponseDto;
-import com.fooddelivery.users.entity.User;
 import com.fooddelivery.users.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,6 +36,11 @@ public class UserController {
     public ResponseEntity<UserResponseDto> getUser(@PathVariable("id") Long id) {
         UserResponseDto user = userService.getUserById(id);
         return ResponseEntity.status(HttpStatus.OK).body(user);
+    }
+    @GetMapping("/{id}/exists")
+    public ResponseEntity<Boolean> checkUserExists(@PathVariable("id") Long id){
+                Boolean ifExists=userService.ifUserExistsById(id);
+                return ResponseEntity.status(HttpStatus.OK).body(ifExists);
     }
 
     @Operation(summary = "Get all users", description = "Returns all users registered in service")
@@ -89,6 +94,17 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
     }
 
+    @Operation(summary = "Create role for existing user", description = "Creates role for existing user")
+    @ApiResponse(responseCode = "201", description = "Role for user was created")
+    @ApiResponse(responseCode = "404", description = "User/role not found")
+    @PostMapping("/{userId}/roles")
+    public ResponseEntity<UserResponseDto> addRoleToUser(
+            @PathVariable Long userId,
+            @RequestBody RoleRequestDto roleRequestDto) {
+        UserResponseDto updatedUser = userService.addRoleToUser(userId, roleRequestDto);
+        return ResponseEntity.ok(updatedUser);
+    }
+
     @Operation(summary = "Delete existing user", description = "Deletes existing user by his ID")
     @ApiResponse(responseCode = "204", description = "User deleted successfully")
     @ApiResponse(responseCode = "404", description = "User not found")
@@ -96,5 +112,16 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
         userService.deleteUser(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @Operation(summary = "Delete role from existing user", description = "Deletes role from existing user")
+    @ApiResponse(responseCode = "204", description = "Role from User was deleted successfully")
+    @ApiResponse(responseCode = "404", description = "User/role not found")
+    @DeleteMapping("/{userId}/roles")
+    public ResponseEntity<UserResponseDto> removeRoleFromUser(
+            @PathVariable Long userId,
+            @RequestBody RoleRequestDto roleRequestDto) {
+        UserResponseDto updatedUser = userService.removeRoleFromUser(userId, roleRequestDto);
+        return ResponseEntity.ok(updatedUser);
     }
 }

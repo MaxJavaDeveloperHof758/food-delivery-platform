@@ -23,7 +23,7 @@ public class UserRequestDto {
     @Schema(description = "User's unique password", example = "My_password2025_xxx", requiredMode = Schema.RequiredMode.REQUIRED)
     private String password;
 
-    @NotBlank(message = "FullName cannot be null")
+    @NotBlank(message = "FullName cannot be empty")
     @Size(min = 2, message = "FullName should consist of 5 or more characters")
     @Schema(description = "User's fullName", example = "Sidorov Ivan Ivanovich", requiredMode = Schema.RequiredMode.REQUIRED)
     private String fullName;

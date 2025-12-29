@@ -16,7 +16,7 @@
             <column name="method" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
-            <column name="amount" type="INTEGER">
+            <column name="amount" type="NUMERIC(10,2)">
                 <constraints nullable="false"/>
             </column>
             <column name="status" type="VARCHAR(50)">

@@ -85,8 +85,8 @@ public class AddressController {
     @ApiResponse(responseCode = "500", description = "Internal server error")
     @GetMapping("/search/city")
     public ResponseEntity<List<AddressResponseDto>> getAddressesByCity(@RequestParam String city) {
-        List<AddressResponseDto> adresses = addressService.getAllAddressesByCity(city);
-        return ResponseEntity.status(HttpStatus.OK).body(adresses);
+        List<AddressResponseDto> addresses = addressService.getAllAddressesByCity(city);
+        return ResponseEntity.status(HttpStatus.OK).body(addresses);
     }
 
     @Operation(summary = "Get all the addresses by state name",
@@ -99,8 +99,8 @@ public class AddressController {
     @ApiResponse(responseCode = "500", description = "Internal server error")
     @GetMapping("/search/state")
     public ResponseEntity<List<AddressResponseDto>> getAddressesByState(@RequestParam String state) {
-        List<AddressResponseDto> adresses = addressService.getAllAddressesByState(state);
-        return ResponseEntity.status(HttpStatus.OK).body(adresses);
+        List<AddressResponseDto> addresses = addressService.getAllAddressesByState(state);
+        return ResponseEntity.status(HttpStatus.OK).body(addresses);
     }
 
     @Operation(summary = "Get all the addresses by country name",
@@ -115,16 +115,6 @@ public class AddressController {
     public ResponseEntity<List<AddressResponseDto>> getAddressesByCountry(@RequestParam String country) {
         List<AddressResponseDto> adresses = addressService.getAllAddressesByCountry(country);
         return ResponseEntity.status(HttpStatus.OK).body(adresses);
-    }
-
-    @Operation(summary = "Create a new address",
-            description = "Creates a new address and saves it in the database")
-    @ApiResponse(responseCode = "201", description = "Address was successfully created")
-    @ApiResponse(responseCode = "500", description = "Internal server error")
-    @PostMapping
-    public ResponseEntity<AddressResponseDto> createAddress(@RequestBody @Valid AddressRequestDto addressRequestDto) {
-        AddressResponseDto createdAddress = addressService.createAddress(addressRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdAddress);
     }
 
     @Operation(summary = "Create a new address for user",
@@ -148,10 +138,11 @@ public class AddressController {
             })
     @ApiResponse(responseCode = "204", description = "Address was successfully updated")
     @ApiResponse(responseCode = "404", description = "Address not found")
-    @PutMapping("/{id}")
-    public ResponseEntity<AddressResponseDto> updateAddress(@PathVariable("id") Long id,
+    @PutMapping("/{addressId}/users/{userId}")
+    public ResponseEntity<AddressResponseDto> updateAddress(@PathVariable("addressId") Long addressId,
+                                                            @PathVariable("userId") Long userId,
                                                             @RequestBody @Valid AddressRequestDto addressRequestDto) {
-        AddressResponseDto updatedAddress = addressService.updateAddress(id, addressRequestDto);
+        AddressResponseDto updatedAddress = addressService.updateAddressForUser(addressId,userId,addressRequestDto);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(updatedAddress);
     }
 
@@ -164,9 +155,10 @@ public class AddressController {
     @ApiResponse(responseCode = "404",description = "Address not found")
     @ApiResponse(responseCode = "400",description = "Invalid input format")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAddress(@PathVariable("id") Long id) {
-        addressService.deleteAddress(id);
+    @DeleteMapping("/{addressId}/users/{userId}")
+    public ResponseEntity<Void> deleteAddress(@PathVariable("addressId") Long addressId,
+                                              @PathVariable("userId") Long userId) {
+        addressService.deleteAddressFromUser(addressId,userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -23,5 +24,5 @@ public class UserResponseDto {
     @Schema(description = "User's set of roles")
     private Set<RoleResponseDto> roles;
     @Schema(description = "User's set of addresses")
-    private Set<AddressSlimDto> addresses;
+    private Set<AddressSlimDto> addresses=new HashSet<>();
 }

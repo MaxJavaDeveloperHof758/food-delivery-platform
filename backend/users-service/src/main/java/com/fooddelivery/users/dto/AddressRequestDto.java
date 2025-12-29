@@ -14,22 +14,21 @@ import lombok.Setter;
 @AllArgsConstructor
 @Schema(description = "Request model for creating/updating address")
 public class AddressRequestDto {
-    @NotBlank(message = "Street cannot be null")
+    @NotBlank(message = "Street cannot be empty")
     @Schema(description = "Street name", example = "Main street", requiredMode = Schema.RequiredMode.REQUIRED)
     private String street;
-    @NotBlank(message = "City cannot be null")
+    @NotBlank(message = "City cannot be empty")
     @Schema(description = "City name", example = "Boston", requiredMode = Schema.RequiredMode.REQUIRED)
     private String city;
-    @NotBlank(message = "Zip cannot be null")
+    @NotBlank(message = "Zip cannot be empty")
     @Schema(description = "Zip code", example = "02989", requiredMode = Schema.RequiredMode.REQUIRED)
     private String zip;
-    @NotBlank(message = "State cannot be null")
-    @Schema(description = "State name", example = "Massachusetts", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "State name", example = "Massachusetts")
     private String state;
-    @NotBlank(message = "Country cannot be null")
+    @NotBlank(message = "Country cannot be empty")
     @Schema(description = "Country name", example = "United States", requiredMode = Schema.RequiredMode.REQUIRED)
     private String country;
-    @NotBlank(message = "UserId is required")
+    @NotNull(message = "UserId is required")
     @Schema(description = "User's unique ID",example = "1",requiredMode = Schema.RequiredMode.REQUIRED)
     private Long userId;
 }

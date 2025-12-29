@@ -7,15 +7,15 @@
 
     <changeSet id="insert_initial_roles" author="MaxJavaDeveloperHof758">
         <insert tableName="roles">
-            <column name="name" value="USER"/>
+            <column name="name" value="ROLE_USER"/>
         </insert>
         <insert tableName="roles">
-            <column name="name" value="ADMIN"/>
+            <column name="name" value="ROLE_ADMIN"/>
         </insert>
 
         <rollback>
             <delete tableName="roles">
-                <where>name IN ('USER', 'ADMIN')</where>
+                <where>name IN ('ROLE_USER', 'ROLE_ADMIN')</where>
             </delete>
         </rollback>
 

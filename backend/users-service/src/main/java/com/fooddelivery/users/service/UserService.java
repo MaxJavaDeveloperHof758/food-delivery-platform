@@ -1,20 +1,20 @@
 package com.fooddelivery.users.service;
 
-import com.fooddelivery.users.dto.UserRequestDto;
-import com.fooddelivery.users.dto.UserResponseDto;
+import com.fooddelivery.users.dto.*;
 import com.fooddelivery.users.entity.Role;
 import com.fooddelivery.users.entity.User;
 import com.fooddelivery.users.exception.ResourceAlreadyExistsException;
+import com.fooddelivery.users.exception.RoleNotFoundException;
 import com.fooddelivery.users.exception.UserNotFoundException;
 import com.fooddelivery.users.mapper.UserMapper;
 import com.fooddelivery.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -36,9 +36,54 @@ public class UserService {
             user.setRoles(new HashSet<>());
         }
         user.getRoles().add(userRole);
+        if (user.getAddresses() == null) {
+            user.setAddresses(new HashSet<>());
+        }
         user.setPasswordHash(passwordEncoder.encode(userRequestDto.getPassword()));
         User savedUser=userRepository.save(user);
-        return userMapper.userToUserResponseDto(savedUser);
+        User userWithDetails = userRepository.findByIdWithDetails(savedUser.getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found after creation"));
+        return userMapper.userToUserResponseDto(userWithDetails);
+    }
+    public Boolean ifUserExistsById(Long id){
+        return userRepository.existsById(id);
+    }
+    @Transactional
+    public UserResponseDto addRoleToUser(Long userId,RoleRequestDto roleRequestDto){
+        User user=userRepository.findByIdWithDetails(userId)
+                .orElseThrow(()->new UserNotFoundException("User not found with id "+userId));
+        Role role=roleService.getOrCreateRole(roleRequestDto.getName());
+        if(user.getRoles()==null){
+            user.setRoles(new HashSet<>());
+        }
+        boolean roleAlreadyExists = user.getRoles().stream()
+                .anyMatch(r -> r.getName().equals(roleRequestDto.getName()));
+       if(roleAlreadyExists){
+           throw new ResourceAlreadyExistsException("User already has role "+role);
+       }
+       user.getRoles().add(role);
+       User updatedUser=userRepository.save(user);
+       return userMapper.userToUserResponseDto(updatedUser);
+    }
+    @Transactional
+    public UserResponseDto removeRoleFromUser(Long userId,RoleRequestDto roleRequestDto){
+        User user=userRepository.findByIdWithDetails(userId)
+                .orElseThrow(()->new UserNotFoundException("User not found with id "+userId));
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            throw new RoleNotFoundException("User has no roles assigned");
+        }
+        Role roleToRemove = user.getRoles().stream()
+                .filter(r -> r.getName().equals(roleRequestDto.getName()))
+                .findFirst()
+                .orElseThrow(() -> new RoleNotFoundException(
+                        "User does not have role: " + roleRequestDto.getName()
+                ));
+        if(user.getRoles().size()==1){
+            throw new IllegalStateException("You cannot remove the last role existing. User must have at least one role");
+        }
+        user.getRoles().remove(roleToRemove);
+        User updatedUser=userRepository.save(user);
+        return userMapper.userToUserResponseDto(updatedUser);
     }
 
     public List<UserResponseDto> getAllUsers() {                           //поиск всех пользователей
@@ -80,6 +125,9 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
+        if(!userRepository.existsById(id)){
+            throw new UserNotFoundException("User not found with id "+id);
+        }
         userRepository.deleteById(id);
     }
 }

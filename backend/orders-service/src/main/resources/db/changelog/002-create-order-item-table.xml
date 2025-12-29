@@ -19,7 +19,7 @@
             <column name="quantity" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
-            <column name="price" type="INTEGER">
+            <column name="price" type="NUMERIC(10,2)">
                 <constraints nullable="false"/>
             </column>
         </createTable>

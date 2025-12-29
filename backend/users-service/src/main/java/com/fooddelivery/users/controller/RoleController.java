@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -59,8 +58,8 @@ public class RoleController {
     @ApiResponse(responseCode = "400", description = "Invalid input format")
     @ApiResponse(responseCode = "404", description = "Role not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    @GetMapping("/name/{name}")
-    public ResponseEntity<RoleResponseDto> getRoleByName(@PathVariable String name) {
+    @GetMapping("/name")
+    public ResponseEntity<RoleResponseDto> getRoleByName(@RequestParam String name) {
         RoleResponseDto role = roleService.findByName(name);
         return ResponseEntity.status(HttpStatus.OK).body(role);
     }
@@ -70,7 +69,7 @@ public class RoleController {
     @ApiResponse(responseCode = "201", description = "Role was successfully created")
     @ApiResponse(responseCode = "400", description = "Invalid input format")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<RoleResponseDto> createRole(@RequestBody @Valid RoleRequestDto roleRequestDto) {
         RoleResponseDto createdRole = roleService.createRole(roleRequestDto.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRole);
@@ -98,6 +97,4 @@ public class RoleController {
         roleService.deleteRole(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
-
-
 }

@@ -4,6 +4,7 @@ import com.fooddelivery.users.dto.AddressRequestDto;
 import com.fooddelivery.users.dto.AddressResponseDto;
 import com.fooddelivery.users.entity.Address;
 import com.fooddelivery.users.entity.User;
+import com.fooddelivery.users.exception.AccessDeniedException;
 import com.fooddelivery.users.exception.AddressNotFoundException;
 import com.fooddelivery.users.exception.UserNotFoundException;
 import com.fooddelivery.users.mapper.AddressMapper;
@@ -60,24 +61,23 @@ public class AddressService {
         return addressMapper.addressToAddressResponseDto(savedAddress);
     }
 
-    public AddressResponseDto createAddress(AddressRequestDto addressRequestDto) {
-        User user = userRepository.findById(addressRequestDto.getUserId())
-                .orElseThrow(() -> new UserNotFoundException("User not found with id " + addressRequestDto.getUserId()));
-        Address address = addressMapper.addressRequestDtoToAddress(addressRequestDto);
-        address.setUser(user);
-        Address savedAddress = addressRepository.save(address);
-        return addressMapper.addressToAddressResponseDto(savedAddress);
-    }
-
-    public AddressResponseDto updateAddress(Long id, AddressRequestDto addressRequestDto) {
-        Address existingAddress = addressRepository.findById(id)
-                .orElseThrow(() -> new AddressNotFoundException("Address not found with id: " + id));
+    public AddressResponseDto updateAddressForUser(Long addressId, Long userId, AddressRequestDto addressRequestDto) {
+        Address existingAddress = addressRepository.findById(addressId)
+                .orElseThrow(() -> new AddressNotFoundException("Address not found with id: " + addressId));
+        if (!existingAddress.getUser().getId().equals(userId)) {
+            throw new AddressNotFoundException("Address does not belong to user with id: " + userId);
+        }
         addressMapper.updateAddressFromDto(addressRequestDto, existingAddress);
         Address updatedAddress = addressRepository.save(existingAddress);
         return addressMapper.addressToAddressResponseDto(updatedAddress);
     }
 
-    public void deleteAddress(Long id) {
-        addressRepository.deleteById(id);
+    public void deleteAddressFromUser(Long addressId,Long userId) {
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new AddressNotFoundException("Address not found with id: " + addressId));
+        if (!address.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Address does not belong to user with id: " + userId);
+        }
+        addressRepository.deleteById(addressId);
     }
 }

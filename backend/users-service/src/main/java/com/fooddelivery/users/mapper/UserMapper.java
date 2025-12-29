@@ -11,7 +11,6 @@ import java.util.List;
         unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
     UserResponseDto userToUserResponseDto(User user);
-    @Mapping(target = "addresses", ignore = true)
     User userResponseDtoToUser(UserResponseDto userResponseDto);
     @Mapping(target = "addresses", ignore = true)
     User userRequestDtoToUser(UserRequestDto userRequestDto);

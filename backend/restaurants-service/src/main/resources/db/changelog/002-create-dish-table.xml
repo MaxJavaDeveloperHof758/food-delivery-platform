@@ -16,11 +16,10 @@
             <column name="description" type="TEXT">
                 <constraints nullable="false"/>
             </column>
-            <column name="price" type="INT">
+            <column name="price" type="NUMERIC(10,2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="image_Url" type="VARCHAR(255)">
-                <constraints nullable="false"/>
+            <column name="image_url" type="VARCHAR(500)">
             </column>
             <column name="restaurant_id" type="BIGINT">
                 <constraints nullable="false"/>
