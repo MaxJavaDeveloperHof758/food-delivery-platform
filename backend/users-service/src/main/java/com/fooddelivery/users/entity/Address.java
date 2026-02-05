@@ -1,6 +1,7 @@
 package com.fooddelivery.users.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -44,6 +45,7 @@ public class Address {
     @ManyToOne
     @JoinColumn(name="user_id")
     @Schema(description = "User who owns this address",implementation = User.class)
+    @JsonIgnore
     private User user;
 
 }

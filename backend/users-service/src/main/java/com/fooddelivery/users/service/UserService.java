@@ -1,49 +1,79 @@
 package com.fooddelivery.users.service;
 
-import com.fooddelivery.users.dto.*;
+import com.fooddelivery.users.dto.RoleRequestDto;
+import com.fooddelivery.users.dto.UserRequestDto;
+import com.fooddelivery.users.dto.UserResponseDto;
+import com.fooddelivery.users.dto.UserUpdateDto;
 import com.fooddelivery.users.entity.Role;
 import com.fooddelivery.users.entity.User;
 import com.fooddelivery.users.exception.ResourceAlreadyExistsException;
 import com.fooddelivery.users.exception.RoleNotFoundException;
 import com.fooddelivery.users.exception.UserNotFoundException;
+import com.fooddelivery.users.mapper.RoleMapper;
 import com.fooddelivery.users.mapper.UserMapper;
+import com.fooddelivery.users.repository.RoleRepository;
 import com.fooddelivery.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
+import org.mapstruct.factory.Mappers;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
     private final RoleService roleService;
+    private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public UserResponseDto createUser(UserRequestDto userRequestDto) {
+
+        log.info("=== DIAGNOSTIC START ===");
+        log.info("Email: {}", userRequestDto.getEmail());
+
         if(userRepository.existsByEmail(userRequestDto.getEmail())){
-            throw new ResourceAlreadyExistsException("User with such email already exists");
+            throw new ResourceAlreadyExistsException("Email is already taken: "+userRequestDto.getEmail());
         }
-        Role userRole=roleService.getOrCreateRole("ROLE_USER");
         User user=userMapper.userRequestDtoToUser(userRequestDto);
-        if (user.getRoles() == null) {
-            user.setRoles(new HashSet<>());
-        }
-        user.getRoles().add(userRole);
-        if (user.getAddresses() == null) {
-            user.setAddresses(new HashSet<>());
-        }
         user.setPasswordHash(passwordEncoder.encode(userRequestDto.getPassword()));
-        User savedUser=userRepository.save(user);
-        User userWithDetails = userRepository.findByIdWithDetails(savedUser.getId())
-                .orElseThrow(() -> new UserNotFoundException("User not found after creation"));
-        return userMapper.userToUserResponseDto(userWithDetails);
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new ResourceNotFoundException("Role USER is not found!"));
+
+        Set<Role> roles = new HashSet<>();
+        roles.add(userRole);
+        user.setRoles(roles);
+
+        user.setAddresses(new HashSet<>());
+
+        log.info("=== Before userRepository.save() ===");
+        User savedUser = userRepository.save(user);
+        log.info("=== After save, ID: {} ===", savedUser.getId());
+
+        UserResponseDto response = new UserResponseDto();
+        response.setId(savedUser.getId());
+        response.setEmail(savedUser.getEmail());
+        response.setFullName(savedUser.getFullName());
+
+        RoleMapper roleMapper = Mappers.getMapper(RoleMapper.class);
+        response.setRoles(roleMapper.roleSetToRoleResponseDtoSet(roles));
+
+        response.setAddresses(new HashSet<>());
+
+        log.info("=== Registration SUCCESS ===");
+        return response;
     }
     public Boolean ifUserExistsById(Long id){
         return userRepository.existsById(id);
@@ -87,7 +117,8 @@ public class UserService {
     }
 
     public List<UserResponseDto> getAllUsers() {                           //поиск всех пользователей
-        return userMapper.userListToUserResponseDtoList(userRepository.findAll());
+        List<User> users = userRepository.findAllWithRolesAndAddresses();
+        return userMapper.userListToUserResponseDtoList(users);
     }
 
     public UserResponseDto getUserById(Long id) {                //поиск пользователя по id
@@ -108,20 +139,36 @@ public class UserService {
         return userMapper.userListToUserResponseDtoList(userRepository.findUsersByFullNameContaining(name));
     }
 
-    public UserResponseDto updateUser(Long userId, UserRequestDto userRequestDto) {
-        User existingUser = userRepository.findById(userId)
+    @Transactional
+    public UserResponseDto updateUser(Long userId, UserUpdateDto userUpdateDto) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id " + userId));
-        if (!existingUser.getEmail().equals(userRequestDto.getEmail()) &&
-                userRepository.existsByEmail(userRequestDto.getEmail())) {
-            throw new ResourceAlreadyExistsException("Email already taken");
+
+        if (userUpdateDto.getEmail() != null) {
+            if (userUpdateDto.getEmail().isBlank()) {
+                throw new IllegalArgumentException("Email cannot be empty");
+            }
+
+            if (!userUpdateDto.getEmail().equals(user.getEmail())) {
+                if (userRepository.existsByEmail(userUpdateDto.getEmail())) {
+                    throw new ResourceAlreadyExistsException("Email is already taken: " + userUpdateDto.getEmail());
+                }
+                user.setEmail(userUpdateDto.getEmail());
+            }
         }
-        userMapper.updateUserFromDto(userRequestDto, existingUser);
-        if (userRequestDto.getPassword() != null &&
-                !userRequestDto.getPassword().isEmpty()) {
-            existingUser.setPasswordHash(passwordEncoder.encode(userRequestDto.getPassword()));
+
+        if (userUpdateDto.getFullName() != null) {
+            if (userUpdateDto.getFullName().isBlank()) {
+                throw new IllegalArgumentException("Full name cannot be empty");
+            }
+            user.setFullName(userUpdateDto.getFullName());
         }
-        User savedUser = userRepository.save(existingUser);
-        return userMapper.userToUserResponseDto(savedUser);
+
+        user.setUpdatedAt(LocalDateTime.now());
+        User updatedUser = userRepository.save(user);
+
+        log.info("User updated successfully: {}", updatedUser.getEmail());
+        return userMapper.userToUserResponseDto(updatedUser);
     }
 
     public void deleteUser(Long id) {

@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -32,6 +33,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "Payment found")
     @ApiResponse(responseCode = "404", description = "Payment not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/order/{orderId}")
     public ResponseEntity<PaymentResponseDto> getPaymentByOrderId(@PathVariable("orderId") Long orderId) {
         PaymentResponseDto payment = paymentService.getPaymentByOrderId(orderId);
@@ -44,6 +46,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "Payment found")
     @ApiResponse(responseCode = "404", description = "Payment not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{paymentId}")
     public ResponseEntity<PaymentResponseDto> getPaymentById(@PathVariable("paymentId") Long paymentId) {
         PaymentResponseDto payment = paymentService.getPaymentById(paymentId);
@@ -58,6 +61,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "Payments found")
     @ApiResponse(responseCode = "404", description = "Payments not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/user/{userId}")
     public ResponseEntity<Page<PaymentResponseDto>> getPaymentsByUserId(@PathVariable("userId") Long userId,
                                                                         Pageable pageable) {
@@ -73,6 +77,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "Payments found")
     @ApiResponse(responseCode = "404", description = "Payments not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/restaurants/{restaurantId}")
     public ResponseEntity<Page<PaymentResponseDto>> getPaymentsByRestaurantId(
             @PathVariable("restaurantId") Long restaurantId,
@@ -91,6 +96,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "Payments found")
     @ApiResponse(responseCode = "404", description = "Payments not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/status")
     public ResponseEntity<Page<PaymentResponseDto>> getPaymentsByStatus(@RequestParam PaymentStatus status,
                                                                         Pageable pageable) {
@@ -109,6 +115,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "Payments found")
     @ApiResponse(responseCode = "404", description = "Payments not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/dateRange")
     public ResponseEntity<Page<PaymentResponseDto>> getPaymentsByDateRange(@RequestParam LocalDateTime startDate,
                                                                            @RequestParam LocalDateTime endDate,
@@ -124,6 +131,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "The total sum is received")
     @ApiResponse(responseCode = "404", description = "Payments not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/total/completed")
     public ResponseEntity<BigDecimal> getTotalCompletedAmount() {
         BigDecimal totalSum = paymentService.countTotalWithCompletedStatus();
@@ -139,6 +147,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "404", description = "Order not found")
     @ApiResponse(responseCode = "409", description = "Payment already exists")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/orders/{orderId}")
     public ResponseEntity<PaymentResponseDto> createPaymentForOrder(@PathVariable("orderId") Long orderId,
                                                                     @RequestParam(defaultValue = "CREDIT_CARD") String paymentMethod) {
@@ -154,10 +163,11 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "Payment status was successfully updated")
     @ApiResponse(responseCode = "404", description = "Payment not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{paymentId}/status")
     public ResponseEntity<PaymentResponseDto> updatePaymentStatus(@PathVariable("paymentId") Long paymentId,
-                                                                  @RequestParam PaymentStatus newtStatus) {
-        PaymentResponseDto updatedPayment = paymentService.updatePaymentStatus(paymentId, newtStatus);
+                                                                  @RequestParam PaymentStatus newStatus) {
+        PaymentResponseDto updatedPayment = paymentService.updatePaymentStatus(paymentId, newStatus);
         return ResponseEntity.status(HttpStatus.OK).body(updatedPayment);
     }
 
@@ -170,6 +180,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "400", description = "Payment refund failure")
     @ApiResponse(responseCode = "404", description = "Payment not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{paymentId}/refund")
     public ResponseEntity<PaymentResponseDto> refundPayment(@PathVariable("paymentId") Long paymentId,
                                                             @RequestParam BigDecimal refundAmount) {

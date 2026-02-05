@@ -1,15 +1,12 @@
 package com.fooddelivery.orders.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.hypersistence.utils.hibernate.type.basic.PostgreSQLEnumType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.TypeDef;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,7 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-@TypeDef(name = "pgsql_enum", typeClass = PostgreSQLEnumType.class)
 @Table(name = "orders")
 @Schema(description = "Order model for storing order details")
 public class Order {
@@ -29,7 +25,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Schema(description = "Order's status", example = "COMPLETED", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Order's status", example = "CONFIRMED", requiredMode = Schema.RequiredMode.REQUIRED)
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
@@ -74,7 +70,13 @@ public class Order {
 
     @PrePersist
     protected void onCreate() {
-        this.orderDate = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        if (this.orderDate == null) {
+            this.orderDate = now;
+        }
+        if (this.statusUpdatedAt == null) {
+            this.statusUpdatedAt = now;
+        }
     }
 
     @PreUpdate

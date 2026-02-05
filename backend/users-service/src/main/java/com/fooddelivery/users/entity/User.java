@@ -1,11 +1,9 @@
 package com.fooddelivery.users.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,22 +11,26 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Builder
 @Entity
 @Table(name = "users")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Schema(description = "User model")
 public class User {
 
     @Schema(description = "User's unique identifier",example = "1")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Schema(description = "User's unique email",example = "ivanov1999@mail.ru",requiredMode = Schema.RequiredMode.REQUIRED)
     @Column(unique = true, nullable = false, length = 100)
+    @EqualsAndHashCode.Include
     private String email;
 
     @Schema(description = "User's unique password",example = "pass123_word_456",requiredMode = Schema.RequiredMode.REQUIRED)
@@ -53,6 +55,8 @@ public class User {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    @ToString.Exclude
     private Set<Address> addresses = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -61,5 +65,7 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @JsonIgnore
+    @ToString.Exclude
     private Set<Role> roles = new HashSet<>();
 }

@@ -3,6 +3,7 @@ package com.fooddelivery.orders.controller;
 import com.fooddelivery.orders.dto.OrderRequestDto;
 import com.fooddelivery.orders.dto.OrderResponseDto;
 import com.fooddelivery.orders.entity.OrderStatus;
+import com.fooddelivery.orders.security.UserPrincipal;
 import com.fooddelivery.orders.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,10 +14,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.Param;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -35,6 +37,7 @@ public class OrderController {
     @ApiResponse(responseCode = "200", description = "Order found")
     @ApiResponse(responseCode = "404", description = "Order not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponseDto> getOrderById(@PathVariable("orderId") Long orderId) {
         OrderResponseDto orderResponseDto = orderService.getOrderById(orderId);
@@ -47,6 +50,7 @@ public class OrderController {
     @ApiResponse(responseCode = "200", description = "Order found")
     @ApiResponse(responseCode = "404", description = "Order not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{orderId}/with-payment")
     public ResponseEntity<OrderResponseDto> getOrderByIdWithPayment(@PathVariable("orderId") Long orderId) {
         OrderResponseDto orderResponseDto = orderService.getOrderByIdWithPayment(orderId);
@@ -56,17 +60,42 @@ public class OrderController {
     @Operation(summary = "Get all orders by user id and order status",
             description = "Returns all orders by user id and order status",
             parameters = {@Parameter(name = "userId", description = "User's unique identifier", example = "1"),
-                    @Parameter(name = "status", description = "Order status", example = "IN_PROGRESS", required = false),
+                    @Parameter(name = "status", description = "Order status", example = "DELIVERED", required = false),
                     @Parameter(name = "page", description = "Page number (0-based)", example = "0"),
                     @Parameter(name = "size", description = "Number of items per page", example = "10")})
     @ApiResponse(responseCode = "200", description = "Orders found")
     @ApiResponse(responseCode = "404", description = "Orders not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/user/{userId}")
     public ResponseEntity<Page<OrderResponseDto>> getOrdersByUserId(@PathVariable("userId") Long userId,
                                                                     @RequestParam(required = false) OrderStatus status,
                                                                     Pageable pageable) {
 
+        Page<OrderResponseDto> orders;
+        if (status != null) {
+            orders = orderService.getOrdersByUserIdAndStatus(userId, status, pageable);
+        } else {
+            orders = orderService.getOrdersByUserId(userId, pageable);
+        }
+        return ResponseEntity.ok(orders);
+    }
+
+    @Operation(summary = "Get all orders made by the current user with status filter",
+            description = "Returns all orders made by the current user with order filter",
+            parameters = {@Parameter(name = "status", description = "Order status", example = "PLACED", required = false),
+                    @Parameter(name = "page", description = "Page number (0-based)", example = "0"),
+                    @Parameter(name = "size", description = "Number of items per page", example = "10")})
+    @ApiResponse(responseCode = "200", description = "Orders found")
+    @ApiResponse(responseCode = "404", description = "Orders not found")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/user/me")
+    public ResponseEntity<Page<OrderResponseDto>> getMyOrders(Authentication authentication,
+                                                              @RequestParam(required = false) OrderStatus status,
+                                                              Pageable pageable) {
+        UserPrincipal userPrincipal=(UserPrincipal)authentication.getPrincipal();
+        Long userId=userPrincipal.getId();
         Page<OrderResponseDto> orders;
         if (status != null) {
             orders = orderService.getOrdersByUserIdAndStatus(userId, status, pageable);
@@ -84,6 +113,7 @@ public class OrderController {
     @ApiResponse(responseCode = "200", description = "Orders found")
     @ApiResponse(responseCode = "404", description = "Orders not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/restaurant/{restaurantId}")
     public ResponseEntity<Page<OrderResponseDto>> getOrdersByRestaurantId(@PathVariable("restaurantId") Long restaurantId,
                                                                           @PageableDefault(size = 10,
@@ -101,6 +131,7 @@ public class OrderController {
     @ApiResponse(responseCode = "200", description = "Orders found")
     @ApiResponse(responseCode = "404", description = "Orders not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/restaurant/{restaurantId}/active")
     public ResponseEntity<Page<OrderResponseDto>> getActiveOrdersByRestaurantId(@PathVariable("restaurantId") Long restaurantId,
                                                                                 @PageableDefault(size = 10,
@@ -120,6 +151,7 @@ public class OrderController {
     @ApiResponse(responseCode = "200", description = "Orders found")
     @ApiResponse(responseCode = "404", description = "Orders not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/restaurant/{restaurantId}/dateRange")
     public ResponseEntity<Page<OrderResponseDto>> getOrdersByRestaurantIdAndDateRange
             (@PathVariable("restaurantId") Long restaurantId,
@@ -150,6 +182,7 @@ public class OrderController {
     @ApiResponse(responseCode = "200", description = "Orders found")
     @ApiResponse(responseCode = "404", description = "Orders not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<Page<OrderResponseDto>> searchOrders
             (@RequestParam(required = false) Long userId,
@@ -178,11 +211,14 @@ public class OrderController {
     @ApiResponse(responseCode = "404", description = "Resource not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
     @ApiResponse(responseCode = "503", description = "Service unavailable")
+    @PreAuthorize("hasRole('USER')")
     @PostMapping
-    public ResponseEntity<OrderResponseDto> placeOrder(@RequestHeader("X-User-Id") Long userId,
+    public ResponseEntity<OrderResponseDto> placeOrder(Authentication authentication,
                                                        @RequestBody @Valid OrderRequestDto orderRequestDto,
                                                        @RequestParam(required = true,
                                                                defaultValue = "CREDIT_CARD") String paymentMethod) {
+        UserPrincipal userPrincipal=(UserPrincipal) authentication.getPrincipal();
+        Long userId=userPrincipal.getId();
         OrderResponseDto orderResponseDto = orderService.placeOrder(userId, orderRequestDto, paymentMethod);
         return ResponseEntity.status(HttpStatus.CREATED).body(orderResponseDto);
     }
@@ -190,11 +226,12 @@ public class OrderController {
     @Operation(summary = "Update status for existing order",
             description = "Updates order status if available for existing order",
             parameters = {@Parameter(name = "orderId", description = "Order's unique identifier", example = "1"),
-                    @Parameter(name = "status", description = "Order new status", example = "COMPLETED")})
+                    @Parameter(name = "status", description = "Order new status", example = "DELIVERED")})
     @ApiResponse(responseCode = "200", description = "Order status updated")
     @ApiResponse(responseCode = "404", description = "Order not found")
     @ApiResponse(responseCode = "409", description = "Order status conflict")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{orderId}/status")
     public ResponseEntity<OrderResponseDto> updateOrderStatus(@PathVariable("orderId") Long orderId,
                                                               @RequestParam(required = true) OrderStatus status) {
@@ -208,6 +245,7 @@ public class OrderController {
     @ApiResponse(responseCode = "204", description = "Order was successfully deleted")
     @ApiResponse(responseCode = "404", description = "Order not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{orderId}")
     public ResponseEntity<Void> deleteUserOrder(@PathVariable("orderId") Long orderId) {
         orderService.deleteUserOrder(orderId);

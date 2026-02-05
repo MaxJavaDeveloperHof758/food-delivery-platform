@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class OrderItemController {
     @ApiResponse(responseCode = "200", description = "Order items found")
     @ApiResponse(responseCode = "404", description = "Order items not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/order/{orderId}")
     public ResponseEntity<List<OrderItemResponseDto>> getOrderItemsByOrderId(@PathVariable("orderId") Long orderId){
         List<OrderItemResponseDto> orderItems=orderItemService.getOrderItemsByOrderId(orderId);
@@ -37,6 +39,7 @@ public class OrderItemController {
     @ApiResponse(responseCode = "200", description = "Order items found")
     @ApiResponse(responseCode = "404", description = "Order items not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/order/{orderId}/order")
     public ResponseEntity<List<OrderItemResponseDto>> getOrderItemsByOrderIdWithOrder(@PathVariable("orderId") Long orderId){
         List<OrderItemResponseDto> orderItems=orderItemService.getOrderItemsByOrderIdWithOrder(orderId);
@@ -49,6 +52,7 @@ public class OrderItemController {
     @ApiResponse(responseCode = "200", description = "Order item found")
     @ApiResponse(responseCode = "404", description = "Order item not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{orderItemId}")
     public ResponseEntity<OrderItemResponseDto> getOrderItemById(@PathVariable("orderItemId") Long orderItemId){
         OrderItemResponseDto orderItem=orderItemService.getOrderItemById(orderItemId);
@@ -61,6 +65,7 @@ public class OrderItemController {
     @ApiResponse(responseCode = "200", description = "Order item found")
     @ApiResponse(responseCode = "404", description = "Order item not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/dish/{dishId}/total-sold")
     public ResponseEntity<Integer> getTotalSoldQuantityByDishId(@PathVariable("dishId") Long dishId){
         Integer totalSold=orderItemService.getTotalSoldQuantityByDishId(dishId);
@@ -76,6 +81,7 @@ public class OrderItemController {
     @ApiResponse(responseCode = "404", description = "Order item not found")
     @ApiResponse(responseCode = "409", description = "Modification exception")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{orderItemId}/quantity")
     public ResponseEntity<OrderItemResponseDto> updateOrderItemQuantity(@PathVariable("orderItemId") Long orderItemId,
                                                                         @RequestParam @Min(1) Integer newQuantity){
@@ -90,6 +96,7 @@ public class OrderItemController {
     @ApiResponse(responseCode = "404", description = "Order item not found")
     @ApiResponse(responseCode = "409", description = "Modification exception")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{orderItemId}")
     public ResponseEntity<Void> deleteOrderItem(@PathVariable("orderItemId") Long orderItemId){
         orderItemService.deleteOrderItem(orderItemId);

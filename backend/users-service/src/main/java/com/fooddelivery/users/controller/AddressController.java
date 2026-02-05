@@ -2,6 +2,7 @@ package com.fooddelivery.users.controller;
 
 import com.fooddelivery.users.dto.AddressRequestDto;
 import com.fooddelivery.users.dto.AddressResponseDto;
+import com.fooddelivery.users.security.UserPrincipal;
 import com.fooddelivery.users.service.AddressService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,6 +12,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,18 +25,32 @@ import java.util.List;
 public class AddressController {
     private final AddressService addressService;
 
-    @Operation(summary = "Get all addresses existing",
+    @Operation(summary = "Get all addresses that belong to the user",
+            description = "Returns all the addresses that belong to the user")
+    @ApiResponse(responseCode = "200", description = "Addresses found")
+    @ApiResponse(responseCode = "404", description = "Addresses not found")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/my-addresses")
+    public ResponseEntity<List<AddressResponseDto>> getMyAddresses(Authentication authentication) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        List<AddressResponseDto> addresses = addressService.getUserAddresses(userPrincipal.getId());
+        return ResponseEntity.ok(addresses);
+    }
+
+    @Operation(summary = "Get all addresses existing (ADMIN endpoint)",
             description = "Returns all the addresses existing in the database")
     @ApiResponse(responseCode = "200", description = "Addresses found")
     @ApiResponse(responseCode = "404", description = "Addresses not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<AddressResponseDto>> getAllAddresses() {
         List<AddressResponseDto> addresses = addressService.getAllAddresses();
         return ResponseEntity.status(HttpStatus.OK).body(addresses);
     }
 
-    @Operation(summary = "Get one address by ID",
+    @Operation(summary = "Get one address by ID (ADMIN endpoint)",
             description = "Returns one address by ID",
             parameters = {
                     @Parameter(name = "id", description = "Address ID", example = "1")
@@ -47,7 +64,7 @@ public class AddressController {
         return ResponseEntity.status(HttpStatus.OK).body(addressResponseDto);
     }
 
-    @Operation(summary = "Get all the addresses by user's ID",
+    @Operation(summary = "Get all the addresses by user's ID (ADMIN endpoint)",
             description = "Returns all the addresses that belong to the user",
             parameters = {
                     @Parameter(name = "userId", description = "User ID", example = "1")
@@ -61,18 +78,22 @@ public class AddressController {
         return ResponseEntity.status(HttpStatus.OK).body(addresses);
     }
 
-    @Operation(summary = "Get all the addresses by street name",
-            description = "Returns all the addresses by the name of street",
+    @Operation(summary = "Get all the addresses by street name that belong to the user",
+            description = "Returns all the addresses by street name that belong to the user",
             parameters = {
                     @Parameter(name = "street", description = "The name of street", example = "Main street")
             })
     @ApiResponse(responseCode = "200", description = "Addresses found")
     @ApiResponse(responseCode = "404", description = "Addresses not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/search/street")
-    public ResponseEntity<List<AddressResponseDto>> getAddressesByStreet(@RequestParam String street) {
-        List<AddressResponseDto> adresses = addressService.getAllAddressesByStreet(street);
-        return ResponseEntity.status(HttpStatus.OK).body(adresses);
+    public ResponseEntity<List<AddressResponseDto>> getAddressesByStreet(Authentication authentication,
+                                                                         @RequestParam String street) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Long userId = userPrincipal.getId();
+        List<AddressResponseDto> addresses = addressService.getAllAddressesByStreetAndUserId(street, userId);
+        return ResponseEntity.status(HttpStatus.OK).body(addresses);
     }
 
     @Operation(summary = "Get all the addresses by city name",
@@ -83,9 +104,13 @@ public class AddressController {
     @ApiResponse(responseCode = "200", description = "Addresses found")
     @ApiResponse(responseCode = "404", description = "Addresses not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/search/city")
-    public ResponseEntity<List<AddressResponseDto>> getAddressesByCity(@RequestParam String city) {
-        List<AddressResponseDto> addresses = addressService.getAllAddressesByCity(city);
+    public ResponseEntity<List<AddressResponseDto>> getAddressesByCity(Authentication authentication,
+                                                                       @RequestParam String city) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Long userId = userPrincipal.getId();
+        List<AddressResponseDto> addresses = addressService.getAllAddressesByCityAndUserId(city, userId);
         return ResponseEntity.status(HttpStatus.OK).body(addresses);
     }
 
@@ -97,9 +122,13 @@ public class AddressController {
     @ApiResponse(responseCode = "200", description = "Addresses found")
     @ApiResponse(responseCode = "404", description = "Addresses not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/search/state")
-    public ResponseEntity<List<AddressResponseDto>> getAddressesByState(@RequestParam String state) {
-        List<AddressResponseDto> addresses = addressService.getAllAddressesByState(state);
+    public ResponseEntity<List<AddressResponseDto>> getAddressesByState(Authentication authentication,
+                                                                        @RequestParam String state) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Long userId = userPrincipal.getId();
+        List<AddressResponseDto> addresses = addressService.getAllAddressesByStateAndUserId(state, userId);
         return ResponseEntity.status(HttpStatus.OK).body(addresses);
     }
 
@@ -111,22 +140,26 @@ public class AddressController {
     @ApiResponse(responseCode = "200", description = "Addresses found")
     @ApiResponse(responseCode = "404", description = "Addresses not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/search/country")
-    public ResponseEntity<List<AddressResponseDto>> getAddressesByCountry(@RequestParam String country) {
-        List<AddressResponseDto> adresses = addressService.getAllAddressesByCountry(country);
-        return ResponseEntity.status(HttpStatus.OK).body(adresses);
+    public ResponseEntity<List<AddressResponseDto>> getAddressesByCountry(Authentication authentication,
+                                                                          @RequestParam String country) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Long userId = userPrincipal.getId();
+        List<AddressResponseDto> addresses = addressService.getAllAddressesByCountryAndUserId(country, userId);
+        return ResponseEntity.status(HttpStatus.OK).body(addresses);
     }
 
     @Operation(summary = "Create a new address for user",
-            description = "Creates a new address for user and saves it in the database",
-            parameters = {
-                    @Parameter(name = "userId", description = "User ID", example = "1")
-            })
+            description = "Creates a new address for user and saves it in the database")
     @ApiResponse(responseCode = "201", description = "Address was successfully created")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<AddressResponseDto> createAddressForUser(@PathVariable("userId") Long userId,
-                                                                   @RequestBody @Valid AddressRequestDto addressRequestDto) {
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping
+    public ResponseEntity<AddressResponseDto> createAddress(Authentication authentication,
+                                                            @RequestBody @Valid AddressRequestDto addressRequestDto) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Long userId = userPrincipal.getId();
         AddressResponseDto createdAddress = addressService.createAddressForUser(userId, addressRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAddress);
     }
@@ -134,31 +167,38 @@ public class AddressController {
     @Operation(summary = "Update existing address",
             description = "Updates already existing address in the database",
             parameters = {
-                    @Parameter(name = "id", description = "Address ID", example = "1")
+                    @Parameter(name = "addressId", description = "Address ID", example = "1")
             })
     @ApiResponse(responseCode = "204", description = "Address was successfully updated")
     @ApiResponse(responseCode = "404", description = "Address not found")
-    @PutMapping("/{addressId}/users/{userId}")
+    @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/{addressId}/users")
     public ResponseEntity<AddressResponseDto> updateAddress(@PathVariable("addressId") Long addressId,
-                                                            @PathVariable("userId") Long userId,
+                                                            Authentication authentication,
                                                             @RequestBody @Valid AddressRequestDto addressRequestDto) {
-        AddressResponseDto updatedAddress = addressService.updateAddressForUser(addressId,userId,addressRequestDto);
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Long userId = userPrincipal.getId();
+        AddressResponseDto updatedAddress = addressService.updateAddressForUser(addressId, userId, addressRequestDto);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(updatedAddress);
     }
 
     @Operation(summary = "Delete existing address",
             description = "Deletes existing address from the database",
             parameters = {
-                    @Parameter(name = "id", description = "Address ID", example = "1",required = true)
+                    @Parameter(name = "id", description = "Address ID", example = "1", required = true)
             })
     @ApiResponse(responseCode = "204", description = "Address was deleted")
-    @ApiResponse(responseCode = "404",description = "Address not found")
-    @ApiResponse(responseCode = "400",description = "Invalid input format")
+    @ApiResponse(responseCode = "404", description = "Address not found")
+    @ApiResponse(responseCode = "400", description = "Invalid input format")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    @DeleteMapping("/{addressId}/users/{userId}")
+    @PreAuthorize("hasRole('USER')")
+    @DeleteMapping("/{addressId}/users")
     public ResponseEntity<Void> deleteAddress(@PathVariable("addressId") Long addressId,
-                                              @PathVariable("userId") Long userId) {
-        addressService.deleteAddressFromUser(addressId,userId);
+                                              Authentication authentication) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Long userId = userPrincipal.getId();
+        addressService.deleteAddressFromUser(addressId, userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

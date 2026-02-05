@@ -1,5 +1,5 @@
 package com.fooddelivery.orders.entity;
 
 public enum OrderStatus {
-    PLACED,PENDING,IN_PROGRESS,COMPLETED,CANCELED
+    PLACED,CONFIRMED,OUT_FOR_DELIVERY,DELIVERED,CANCELLED
 }

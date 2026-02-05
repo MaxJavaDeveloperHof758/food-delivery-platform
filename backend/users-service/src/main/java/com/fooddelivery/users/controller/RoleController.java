@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class RoleController {
     @ApiResponse(responseCode = "400", description = "Invalid input format")
     @ApiResponse(responseCode = "404", description = "Roles not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<RoleResponseDto>> getAllRoles() {
         List<RoleResponseDto> roles = roleService.getAllRoles();
@@ -43,6 +45,7 @@ public class RoleController {
     @ApiResponse(responseCode = "400", description = "Invalid input format")
     @ApiResponse(responseCode = "404", description = "Role not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<RoleResponseDto> getRoleById(@PathVariable("id") Long id) {
         RoleResponseDto role = roleService.findById(id);
@@ -58,6 +61,7 @@ public class RoleController {
     @ApiResponse(responseCode = "400", description = "Invalid input format")
     @ApiResponse(responseCode = "404", description = "Role not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/name")
     public ResponseEntity<RoleResponseDto> getRoleByName(@RequestParam String name) {
         RoleResponseDto role = roleService.findByName(name);
@@ -69,6 +73,7 @@ public class RoleController {
     @ApiResponse(responseCode = "201", description = "Role was successfully created")
     @ApiResponse(responseCode = "400", description = "Invalid input format")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<RoleResponseDto> createRole(@RequestBody @Valid RoleRequestDto roleRequestDto) {
         RoleResponseDto createdRole = roleService.createRole(roleRequestDto.getName());
@@ -78,6 +83,7 @@ public class RoleController {
     @Operation(summary = "Update existing role", description = "Updates existing role by ID")
     @ApiResponse(responseCode = "200", description = "Role updated")
     @ApiResponse(responseCode = "404", description = "Role not found")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<RoleResponseDto> updateRole(@PathVariable("id") Long id,
                                                       @RequestBody @Valid RoleRequestDto roleRequestDto) {
@@ -92,6 +98,7 @@ public class RoleController {
     })
     @ApiResponse(responseCode = "204", description = "Role deleted successfully")
     @ApiResponse(responseCode = "404", description = "Role not found")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);

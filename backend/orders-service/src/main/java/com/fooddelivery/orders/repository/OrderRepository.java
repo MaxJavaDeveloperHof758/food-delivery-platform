@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order,Long>, JpaSpecificationExecutor<Order> {
-    @EntityGraph(attributePaths = {"items"})
+    @EntityGraph(attributePaths = {"items","payment"})
     Optional<Order> findById(Long id);
 
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.payment WHERE o.id=:id")
@@ -33,8 +33,8 @@ public interface OrderRepository extends JpaRepository<Order,Long>, JpaSpecifica
 
     @Query("SELECT o FROM Order o WHERE o.restaurantId = :restaurantId " +
             "AND o.status IN (com.fooddelivery.orders.entity.OrderStatus.PLACED, " +
-            "com.fooddelivery.orders.entity.OrderStatus.PENDING, " +
-            "com.fooddelivery.orders.entity.OrderStatus.IN_PROGRESS) " +
+            "com.fooddelivery.orders.entity.OrderStatus.CONFIRMED, " +
+            "com.fooddelivery.orders.entity.OrderStatus.OUT_FOR_DELIVERY) " +
             "ORDER BY o.orderDate DESC")
     Page<Order> findActiveByRestaurantId(@Param("restaurantId") Long restaurantId, Pageable pageable);
 

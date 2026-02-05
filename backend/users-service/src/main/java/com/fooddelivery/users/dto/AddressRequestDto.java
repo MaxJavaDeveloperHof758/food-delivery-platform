@@ -28,7 +28,4 @@ public class AddressRequestDto {
     @NotBlank(message = "Country cannot be empty")
     @Schema(description = "Country name", example = "United States", requiredMode = Schema.RequiredMode.REQUIRED)
     private String country;
-    @NotNull(message = "UserId is required")
-    @Schema(description = "User's unique ID",example = "1",requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long userId;
 }

@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.7</version>
+		<version>3.3.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.fooddelivery</groupId>
@@ -17,7 +17,9 @@
 	<properties>
 		<java.version>17</java.version>
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
-		<spring-cloud.version>2022.0.4</spring-cloud.version>
+		<springdoc.version>2.5.0</springdoc.version>
+		<spring-cloud.version>2023.0.5</spring-cloud.version>
+		<liquibase.version>4.25.1</liquibase.version>
 	</properties>
 
 	<dependencies>
@@ -37,15 +39,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate.validator</groupId>
-			<artifactId>hibernate-validator</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish</groupId>
-			<artifactId>jakarta.el</artifactId>
-			<version>4.0.2</version>
 		</dependency>
 
 		<!-- Database & Migration -->
@@ -82,14 +75,37 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
-			<version>3.1.5</version>
 		</dependency>
 
 		<!-- API Documentation -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.3.0</version>
+			<version>${springdoc.version}</version>
+		</dependency>
+
+		<!-- JWT Dependencies-->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.11.5</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.11.5</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
 		</dependency>
 
 		<!-- Test Dependencies -->
@@ -109,22 +125,24 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.hypersistence</groupId>
-			<artifactId>hypersistence-utils-hibernate-55</artifactId>
-			<version>3.7.0</version>
-		</dependency>
-		<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-reflect</artifactId>
 			<version>2.13.15</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-			<version>5.6.15.Final</version>
-		</dependency>
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>

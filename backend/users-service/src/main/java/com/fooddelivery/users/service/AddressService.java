@@ -4,8 +4,8 @@ import com.fooddelivery.users.dto.AddressRequestDto;
 import com.fooddelivery.users.dto.AddressResponseDto;
 import com.fooddelivery.users.entity.Address;
 import com.fooddelivery.users.entity.User;
-import com.fooddelivery.users.exception.AccessDeniedException;
 import com.fooddelivery.users.exception.AddressNotFoundException;
+import com.fooddelivery.users.exception.CustomAccessDeniedException;
 import com.fooddelivery.users.exception.UserNotFoundException;
 import com.fooddelivery.users.mapper.AddressMapper;
 
@@ -36,20 +36,36 @@ public class AddressService {
         return addressMapper.addressListToAddressResponseList(addressRepository.findByUserId(userId));
     }
 
-    public List<AddressResponseDto> getAllAddressesByStreet(String street) {
-        return addressMapper.addressListToAddressResponseList(addressRepository.findAllByStreet(street));
+    public List<AddressResponseDto> getAllAddressesByStreetAndUserId(String street,Long userId) {
+        List<Address> addresses=addressRepository.findByStreetContainingAndUserId(street,userId);
+        if(addresses.isEmpty()){
+            throw new AddressNotFoundException("No addresses found on street "+street+" for current user");
+        }
+        return addressMapper.addressListToAddressResponseList(addresses);
     }
 
-    public List<AddressResponseDto> getAllAddressesByCity(String city) {
-        return addressMapper.addressListToAddressResponseList(addressRepository.findAllByCity(city));
+    public List<AddressResponseDto> getAllAddressesByCityAndUserId(String city,Long userId) {
+        List<Address> addresses=addressRepository.findByCityContainingAndUserId(city,userId);
+        if(addresses.isEmpty()){
+            throw new AddressNotFoundException("No addresses found in city "+city+" for current user");
+        }
+        return addressMapper.addressListToAddressResponseList(addresses);
     }
 
-    public List<AddressResponseDto> getAllAddressesByState(String state) {
-        return addressMapper.addressListToAddressResponseList(addressRepository.findAllByState(state));
+    public List<AddressResponseDto> getAllAddressesByStateAndUserId(String state,Long userId) {
+        List<Address> addresses=addressRepository.findByStateContainingAndUserId(state,userId);
+        if(addresses.isEmpty()){
+            throw new AddressNotFoundException("No addresses found in state "+state+" for current user");
+        }
+        return addressMapper.addressListToAddressResponseList(addresses);
     }
 
-    public List<AddressResponseDto> getAllAddressesByCountry(String country) {
-        return addressMapper.addressListToAddressResponseList(addressRepository.findAllByCountry(country));
+    public List<AddressResponseDto> getAllAddressesByCountryAndUserId(String country,Long userId) {
+        List<Address> addresses=addressRepository.findByCountryContainingAndUserId(country,userId);
+        if(addresses.isEmpty()){
+            throw new AddressNotFoundException("No addresses found in country "+country+" for current user");
+        }
+        return addressMapper.addressListToAddressResponseList(addresses);
     }
 
     public AddressResponseDto createAddressForUser(Long userId, AddressRequestDto addressRequestDto) {
@@ -65,7 +81,7 @@ public class AddressService {
         Address existingAddress = addressRepository.findById(addressId)
                 .orElseThrow(() -> new AddressNotFoundException("Address not found with id: " + addressId));
         if (!existingAddress.getUser().getId().equals(userId)) {
-            throw new AddressNotFoundException("Address does not belong to user with id: " + userId);
+            throw new CustomAccessDeniedException("Address does not belong to user with id: " + userId);
         }
         addressMapper.updateAddressFromDto(addressRequestDto, existingAddress);
         Address updatedAddress = addressRepository.save(existingAddress);
@@ -76,7 +92,7 @@ public class AddressService {
         Address address = addressRepository.findById(addressId)
                 .orElseThrow(() -> new AddressNotFoundException("Address not found with id: " + addressId));
         if (!address.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("Address does not belong to user with id: " + userId);
+            throw new CustomAccessDeniedException("Address does not belong to user with id: " + userId);
         }
         addressRepository.deleteById(addressId);
     }

@@ -9,10 +9,10 @@ import java.util.Optional;
 
 @Repository
 public interface AddressRepository extends JpaRepository<Address,Long> {
-    List<Address> findAllByStreet (String street);
-    List<Address> findAllByCity (String city);
-    List<Address> findAllByState (String state);
-    List<Address> findAllByCountry (String country);
+    List<Address> findByStreetContainingAndUserId (String street,Long userId);
+    List<Address> findByCityContainingAndUserId (String city,Long userId);
+    List<Address> findByStateContainingAndUserId (String state,Long userId);
+    List<Address> findByCountryContainingAndUserId (String country,Long userId);
 
     List<Address> findByUserId(Long userId);
     List<Address> findByCityAndStreet(String city,String street);

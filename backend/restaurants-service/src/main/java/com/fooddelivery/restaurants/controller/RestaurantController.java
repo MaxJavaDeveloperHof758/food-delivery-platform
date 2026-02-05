@@ -9,6 +9,7 @@ import com.fooddelivery.restaurants.service.RestaurantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +20,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/restaurants")
 @RequiredArgsConstructor
 @Tag(name = "Restaurant API", description = "API for managing restaurants")
+@SecurityRequirement(name = "bearerAuth")
 public class RestaurantController {
     private final RestaurantService restaurantService;
     private final DishService dishService;
@@ -85,6 +88,7 @@ public class RestaurantController {
     @ApiResponse(responseCode = "201", description = "Restaurant was successfully created")
     @ApiResponse(responseCode = "404", description = "Restaurant not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<RestaurantResponseDto> createRestaurant(@RequestBody @Valid RestaurantRequestDto restaurantRequestDto) {
         RestaurantResponseDto restaurantResponseDto = restaurantService.createRestaurant(restaurantRequestDto);
@@ -98,6 +102,7 @@ public class RestaurantController {
     @ApiResponse(responseCode = "400", description = "Restaurant already exists in the database")
     @ApiResponse(responseCode = "404", description = "Restaurant not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<RestaurantResponseDto> updateRestaurant(@PathVariable("id") Long id,
                                                                   @RequestBody @Valid RestaurantRequestDto restaurantRequestDto) {
@@ -111,6 +116,7 @@ public class RestaurantController {
     @ApiResponse(responseCode = "204", description = "Restaurant was successfully deleted")
     @ApiResponse(responseCode = "404", description = "Restaurant not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRestaurant(@PathVariable("id") Long id) {
         restaurantService.deleteRestaurant(id);
@@ -171,6 +177,7 @@ public class RestaurantController {
     @ApiResponse(responseCode = "400", description = "Dish already exists in the menu")
     @ApiResponse(responseCode = "404", description = "Restaurant not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{restaurantId}/dishes")
     public ResponseEntity<DishResponseDto> addDishToRestaurantMenu(@PathVariable("restaurantId") Long restaurantId,
                                                                    @RequestBody @Valid DishRequestDto dishRequestDto) {
@@ -186,6 +193,7 @@ public class RestaurantController {
     @ApiResponse(responseCode = "400", description = "Dish already exists in the menu")
     @ApiResponse(responseCode = "404", description = "Restaurant (dish) not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{restaurantId}/dishes/{dishId}")
     public ResponseEntity<DishResponseDto> updateDishForRestaurant(@PathVariable("restaurantId") Long restaurantId,
                                                                    @PathVariable("dishId") Long dishId,
@@ -201,6 +209,7 @@ public class RestaurantController {
     @ApiResponse(responseCode = "204", description = "Dish was successfully deleted from the menu")
     @ApiResponse(responseCode = "404", description = "Restaurant (dish) not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{restaurantId}/dishes/{dishId}")
     public ResponseEntity<Void> deleteDishFromRestaurant(@PathVariable("restaurantId") Long restaurantId,
                                                          @PathVariable("dishId") Long dishId) {
